@@ -666,7 +666,7 @@ nav a.on::before { color: var(--accent); }
         <div class="row"><button class="btn sm" id="haTest" data-i18n="s.test">Test</button><span class="hint" id="haState"></span></div>
       </div>
 
-      <div class="card">
+      <div class="card" hidden><!-- Studio GBRO fork: Discord not offered -->
         <h3 data-i18n="s.discord.title">Discord</h3>
         <div class="row" style="margin-bottom:8px"><label class="switch"><input type="checkbox" data-bind="discord.enabled"><span></span></label> <span data-i18n="s.discord.enable">Connect to the Discord app on this PC (for the Discord widget)</span></div>
         <p class="hint" style="margin:0 0 12px" data-i18n="s.discord.hint">Create an application at discord.com/developers/applications, add the redirect http://127.0.0.1 under OAuth2, and copy its client ID and secret here. Discord asks you to approve PhoneBox once. If it refuses the login, add your account under the application's App Testers. Step by step: docs/DISCORD.md.</p>
@@ -682,7 +682,7 @@ nav a.on::before { color: var(--accent); }
         <p class="hint" style="margin:0" data-i18n="s.discord.chatHint">Sends the text of the channels you open in the widget to the phone. Asks Discord for permission to read messages, so Discord asks you to approve PhoneBox once more. The text stays in memory only (never in a file or the log) and is gone when Discord disconnects or this is turned off. If you decline, only the chat stays off.</p>
       </div>
 
-      <div class="card">
+      <div class="card" hidden><!-- Studio GBRO fork: Steam not offered -->
         <h3 data-i18n="s.steam.title">Steam</h3>
         <div class="row" style="margin-bottom:8px"><label class="switch"><input type="checkbox" data-bind="steam.enabled" aria-labelledby="steamEnabledLabel"><span></span></label> <span id="steamEnabledLabel" data-i18n="s.steam.enable">Connect Steam (for the Steam friends widget)</span></div>
         <p class="hint" style="margin:0 0 12px" data-i18n="s.steam.hint">Create a user Web API key at steamcommunity.com/dev/apikey and enter your SteamID64 or profile URL. Custom profile names are resolved when saved; only the SteamID64 is stored. Your profile's friend list must be visible to this API key for GetFriendList; make Game details public to show games. The key stays on this computer. Step by step: docs/STEAM.md.</p>
@@ -1235,6 +1235,10 @@ function changed() {
 
 // ---------------------------------------------------------------- pages: visual layout editor
 let catalog = { cols: 12, rows: 6, widgets: [], templates: [] };
+/* Studio GBRO fork: widgets and page templates left out of the "add" lists for professional use (gaming, markets).
+   Existing pages keep working; these are only not offered any more. */
+const GBRO_HIDDEN = new Set(['discord', 'discord-controls', 'steam', 'steam-activity', 'steam-library', 'exchange', 'crypto']);
+const GBRO_HIDDEN_TEMPLATES = new Set(['markets']);
 let selPage = 0;
 let selWidget = -1;
 let activeStackSubIdx = -1;
@@ -1590,7 +1594,7 @@ function startDrag(e, w, i, mode) {
 let palQuery = '';
 function renderPalette() {
   const q = palQuery.trim().toLowerCase();
-  const list = catalog.widgets.filter((d) => !q || `${d.name} ${d.desc} ${d.type} ${d.category}`.toLowerCase().includes(q));
+  const list = catalog.widgets.filter((d) => !GBRO_HIDDEN.has(d.type)).filter((d) => !q || `${d.name} ${d.desc} ${d.type} ${d.category}`.toLowerCase().includes(q));
   const groups = [...new Set(list.map((d) => d.category || 'Other'))];
   $('palette').replaceChildren(...(list.length ? groups.flatMap((g) => [h('div', { class: 'pal-cat' }, g),
     ...list.filter((d) => (d.category || 'Other') === g).map((d) => h('button', {
@@ -1810,7 +1814,7 @@ function renderStackWidgetsOption(w, o) {
 
   const quickSelect = h('div', { class: 'row', style: { gap: '6px', marginTop: '8px' } },
     h('select', { id: 'stackQuickAdd', style: { flex: '1' } },
-      ...catalog.widgets.filter((cw) => !['stack', 'command'].includes(cw.type)).map((cw) => h('option', { value: cw.type }, plain(`${cw.icon} ${cw.name}`)))
+      ...catalog.widgets.filter((cw) => !['stack', 'command'].includes(cw.type) && !GBRO_HIDDEN.has(cw.type)).map((cw) => h('option', { value: cw.type }, plain(`${cw.icon} ${cw.name}`)))
     ),
     h('button', { type: 'button', class: 'btn sm', onclick: () => {
       const sel = $('stackQuickAdd');
@@ -2172,7 +2176,7 @@ function openTemplates(index) {
     h('h3', {}, index == null ? tc('New page') : tc('Replace the widgets of "{title}"').replace('{title}', () => cfg.pages[index].title)),
     h('div', { class: 'tpl-grid' },
       h('button', { class: 'tpl', onclick: () => pick(null) }, h('div', { class: 'mini empty-mini' }, icon('plus')), h('b', {}, t('s.js.blankPage')), h('small', {}, t('s.js.blankPageHint'))),
-      ...catalog.templates.map((t) => h('button', { class: 'tpl', onclick: () => pick(t) }, miniMap(t.widgets), h('b', {}, rich(`${t.icon} ${t.title}`)), h('small', {}, t.desc)))));
+      ...catalog.templates.filter((t) => !GBRO_HIDDEN_TEMPLATES.has(t.id)).map((t) => h('button', { class: 'tpl', onclick: () => pick(t) }, miniMap(t.widgets), h('b', {}, rich(`${t.icon} ${t.title}`)), h('small', {}, t.desc)))));
   $('modal').hidden = false;
 }
 let onModalClose = null; // a dialog that has to clean up (the pairing code) sets this
