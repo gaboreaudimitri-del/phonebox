@@ -10,8 +10,8 @@ param(
     [int]$DelaiMs = 1500
 )
 $ErrorActionPreference = 'Stop'
-# UTF-8 only for the deck (output read by PhoneBox); a PowerShell window keeps its own encoding
-if ([Console]::IsOutputRedirected) { [Console]::OutputEncoding = [Text.Encoding]::UTF8 }
+# UTF-8 for the deck only (PhoneBox reads the output); never fatal: some windows (ISE...) have no console
+try { if ([Console]::IsOutputRedirected) { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } } catch { }
 if (-not (Test-Path $Matrice)) { "Matrice des sites introuvable :`n$Matrice"; exit }
 if (-not (Test-Path $Liste)) {
     # première utilisation : le fichier est créé avec un exemple, à compléter
