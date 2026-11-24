@@ -589,8 +589,10 @@ class AgentLink(private val context: Context) {
                 val fp = q["fp"]?.lowercase()?.takeIf { FINGERPRINT.matches(it) } ?: return null
                 val port = q["port"]?.toIntOrNull()?.takeIf { it in 1..65535 } ?: return null
                 val code = q["c"]?.takeIf { CODE.matches(it) } ?: return null
-                val hosts = q["h"].orEmpty().split(',').map { it.trim() }.filter { isLocalAddress(it) }.take(8)
-                if (hosts.isEmpty()) return null
+                val lanHosts = q["h"].orEmpty().split(',').map { it.trim() }.filter { isLocalAddress(it) && it != BRIDGE_HOST }.take(8)
+                if (lanHosts.isEmpty()) return null
+                // Studio GBRO fork: the pairing page passes only LAN addresses on; the Bluetooth bridge is tried first
+                val hosts = listOf(BRIDGE_HOST) + lanHosts
                 val pc = q["pc"].orEmpty().filter { it >= ' ' }.take(64).ifBlank { "your computer" }
                 return PairLink(pc, fp, port, hosts, code)
             }

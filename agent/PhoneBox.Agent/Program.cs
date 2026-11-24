@@ -325,7 +325,10 @@ app.MapPost("/api/pair/start", (ConfigStore cfg, PairingCodes codes) =>
     var (code, expiresAt, attempt) = codes.Start(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
     var hosts = Lan.PairHosts(configStore.Get());
     var fingerprint = Lan.Fingerprint(lanCert);
-    var link = PairingCodes.Link(Environment.MachineName, fingerprint, lanCfg.Port, hosts, code);
+    // Studio GBRO fork: the pairing web page only passes private LAN addresses on, so the link carries those (or a
+    // placeholder); the app adds its Bluetooth bridge address itself, and the claim answer gives the real list.
+    var linkHosts = Lan.Addresses() is { Count: > 0 } lanHosts ? lanHosts : ["10.255.255.254"];
+    var link = PairingCodes.Link(Environment.MachineName, fingerprint, lanCfg.Port, linkHosts, code);
     var apk = $"https://github.com/ersinkoc/phonebox/releases/download/v{AppPaths.Version}/PhoneBox-{AppPaths.Version}.apk";
     return Results.Json(new
     {
