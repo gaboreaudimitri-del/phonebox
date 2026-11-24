@@ -1,5 +1,5 @@
 # Studio GBRO fork: puts the phone app and the Windows agent of the gbro-* branches on a public download page
-# (release "gbro-latest"), so they download on a phone without signing in to GitHub.
+# (release "bluetooth-latest"), so they download on a phone without signing in to GitHub.
 name: gbro-download
 
 on:
@@ -29,11 +29,11 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --console=plain
-          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/PhoneBox-GBRO.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/PhoneBox-Bluetooth.apk"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: gbro-apk
-          path: PhoneBox-GBRO.apk
+          path: PhoneBox-Bluetooth.apk
 
   agent:
     runs-on: windows-latest
@@ -49,11 +49,11 @@ jobs:
           # the GBRO deck scripts (Command widgets: sites, Wrike, Outlook) ship next to the agent
           New-Item -ItemType Directory -Force out/Scripts | Out-Null
           Copy-Item gbro/scripts/* out/Scripts/
-          Compress-Archive -Path out/* -DestinationPath PhoneBox-GBRO-Windows.zip
+          Compress-Archive -Path out/* -DestinationPath PhoneBox-Bluetooth-Windows.zip
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: gbro-agent
-          path: PhoneBox-GBRO-Windows.zip
+          path: PhoneBox-Bluetooth-Windows.zip
 
   publish:
     needs: [apk, agent]
@@ -69,7 +69,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
+          # the former name of this page, removed so only one download page remains
           gh release delete gbro-latest --yes --cleanup-tag || true
-          gh release create gbro-latest PhoneBox-GBRO.apk PhoneBox-GBRO-Windows.zip \
-            --target "$GITHUB_SHA" --prerelease --title "PhoneBox GBRO (Bluetooth) - test" \
-            --notes "Version Studio GBRO : liaison Bluetooth, sans port réseau. Branche ${GITHUB_REF_NAME}, commit ${GITHUB_SHA::7}."
+          gh release delete bluetooth-latest --yes --cleanup-tag || true
+          gh release create bluetooth-latest PhoneBox-Bluetooth.apk PhoneBox-Bluetooth-Windows.zip \
+            --target "$GITHUB_SHA" --prerelease --title "PhoneBox - édition Bluetooth" \
+            --notes "Édition Bluetooth : liaison téléphone-PC en Bluetooth, sans port réseau. Commit ${GITHUB_SHA::7}."

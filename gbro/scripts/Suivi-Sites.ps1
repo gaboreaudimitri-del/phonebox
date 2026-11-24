@@ -1,5 +1,5 @@
 ﻿<#
-  Studio GBRO - dalle « Mes sites » (widget Commande de PhoneBox).
+  PhoneBox - dalle « Mes sites » (widget Commande de PhoneBox).
   Teste le routeur (.254) de chaque site suivi, lu dans la matrice des sites de la Console Admin.
   Les sites suivis sont listés (un nom de ville par ligne) dans Mes-sites.txt, à côté de ce script.
   Affichage : une ligne par site, vert = répond, rouge = ne répond pas. Rien n'est modifié.

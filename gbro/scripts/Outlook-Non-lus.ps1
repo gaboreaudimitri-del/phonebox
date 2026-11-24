@@ -1,5 +1,5 @@
 ﻿<#
-  Studio GBRO - dalle « Mails non lus » (widget Commande de PhoneBox), Outlook classique de ce PC.
+  PhoneBox - dalle « Mails non lus » (widget Commande de PhoneBox), Outlook classique de ce PC.
   Lit seulement le nombre de messages non lus de la boîte de réception, sans ouvrir aucun message.
 #>
 [Console]::OutputEncoding = [Text.Encoding]::UTF8

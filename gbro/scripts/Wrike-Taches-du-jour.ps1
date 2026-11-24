@@ -1,5 +1,5 @@
 ﻿<#
-  Studio GBRO - dalle « Wrike : clôturé aujourd'hui » (widget Commande de PhoneBox).
+  PhoneBox - dalle « Wrike : clôturé aujourd'hui » (widget Commande de PhoneBox).
   Liste vos tâches Wrike terminées aujourd'hui.
 
   Une seule fois, pour enregistrer votre jeton Wrike (Wrike > Applications et intégrations > API > Créer un jeton permanent) :

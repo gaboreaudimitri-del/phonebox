@@ -82,7 +82,7 @@ object BluetoothBridge {
             var server: BluetoothServerSocket? = null
             try {
                 if (!adapter.isEnabled) { Thread.sleep(5000); continue }
-                server = adapter.listenUsingRfcommWithServiceRecord("PhoneBox GBRO", SERVICE_ID)
+                server = adapter.listenUsingRfcommWithServiceRecord("PhoneBox", SERVICE_ID)
                 val socket = server.accept() // blocks until a paired PC connects
                 try { server.close() } catch (_: Exception) {}
                 server = null

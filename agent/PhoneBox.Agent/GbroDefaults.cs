@@ -55,9 +55,9 @@ public static class GbroDefaults
                     c.Controls.Actions.Add(new DeckAction { Id = id, Label = label, Kind = "meeting", Target = shortcut });
             c.GbroSeed = Version;
             var error = store.Save(JsonSerializer.Serialize(c, ConfigStore.WriteOpts), store.Version);
-            if (error is null) log?.LogInformation("Studio GBRO: Teams, Outlook and lock controls added");
-            else log?.LogInformation("Studio GBRO: controls not added ({Error})", error);
+            if (error is null) log?.LogInformation("PhoneBox: Teams, Outlook and lock controls added");
+            else log?.LogInformation("PhoneBox: controls not added ({Error})", error);
         }
-        catch (Exception e) { log?.LogInformation("Studio GBRO: controls not added ({Error})", e.Message); }
+        catch (Exception e) { log?.LogInformation("PhoneBox: controls not added ({Error})", e.Message); }
     }
 }
