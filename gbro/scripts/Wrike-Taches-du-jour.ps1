@@ -9,7 +9,8 @@
 #>
 param([switch]$Configurer, [int]$Max = 8)
 $ErrorActionPreference = 'Stop'
-[Console]::OutputEncoding = [Text.Encoding]::UTF8
+# UTF-8 only for the deck (output read by PhoneBox); a PowerShell window keeps its own encoding
+if ([Console]::IsOutputRedirected) { [Console]::OutputEncoding = [Text.Encoding]::UTF8 }
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $fichier = Join-Path $env:APPDATA 'PhoneBox\wrike.jeton'
 
