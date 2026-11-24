@@ -58,6 +58,14 @@ public sealed class CalendarMonitor(ConfigStore config, ILogger<CalendarMonitor>
             try
             {
                 var url = src.Url.Trim();
+                // Studio GBRO fork: "outlook" = the classic Outlook of this computer (OutlookCalendar.cs)
+                if (OutlookCalendar.IsOutlook(url))
+                {
+                    var mine = await OutlookCalendar.ReadAsync(from, to, name, src.Color ?? "#0078d4");
+                    _lastGood[src.Url] = mine;
+                    events.AddRange(mine);
+                    continue;
+                }
                 if (url.StartsWith("webcal://", StringComparison.OrdinalIgnoreCase)) url = "https://" + url[9..];
                 var text = await Http.GetStringAsync(url, ct);
                 var fresh = Ics.Parse(text, from, to).Select(e => e with { Calendar = name, Color = src.Color ?? "#60a5fa" }).ToList();

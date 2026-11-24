@@ -606,6 +606,8 @@ nav a.on::before { color: var(--accent); }
           <i>Publish a calendar</i> (ICS link); iCloud › share as a public calendar (<code>webcal://</code> works). The addresses stay on this computer.</p>
         <div id="calList"></div>
         <button class="btn sm" id="calAdd" data-i18n="s.calendars.add">＋ Add a calendar</button>
+        <!-- Studio GBRO fork: the classic Outlook of this PC, read locally (address "outlook") -->
+        <button class="btn sm" id="calAddOutlook" title="Outlook classique installé sur ce PC : rien ne quitte l'ordinateur">＋ Outlook de ce PC</button>
       </div>
 
       <div class="card">
@@ -2665,6 +2667,12 @@ $('cameraAdd').onclick = () => {
   cfg.cameras.sources ??= [];
   cfg.cameras.sources.push({ id: cameraId(), name: '', url: '', transport: 'tcp', fps: 5 });
   renderCameras(); changed();
+};
+$('calAddOutlook').onclick = () => {
+  cfg.calendars ??= [];
+  if (!cfg.calendars.some((c) => (c.url || '').trim().toLowerCase() === 'outlook'))
+    cfg.calendars.push({ name: 'Outlook', url: 'outlook', color: '#0078d4' });
+  renderCalendars(); changed();
 };
 $('calAdd').onclick = () => {
   cfg.calendars ??= [];
