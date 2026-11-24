@@ -1,0 +1,72 @@
+# Studio GBRO fork: puts the phone app and the Windows agent of the gbro-* branches on a public download page
+# (release "gbro-latest"), so they download on a phone without signing in to GitHub.
+name: gbro-download
+
+on:
+  push:
+    branches: ["gbro-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gbro-download
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - name: Build the phone app
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --console=plain
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/PhoneBox-GBRO.apk"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gbro-apk
+          path: PhoneBox-GBRO.apk
+
+  agent:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.0.x
+      - name: Build the Windows agent
+        shell: pwsh
+        run: |
+          dotnet publish agent/PhoneBox.Agent -c Release -f net10.0-windows10.0.19041.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o out --nologo
+          Compress-Archive -Path out/* -DestinationPath PhoneBox-GBRO-Windows.zip
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gbro-agent
+          path: PhoneBox-GBRO-Windows.zip
+
+  publish:
+    needs: [apk, agent]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          merge-multiple: true
+      - name: Publish on the gbro-latest download page
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release delete gbro-latest --yes --cleanup-tag || true
+          gh release create gbro-latest PhoneBox-GBRO.apk PhoneBox-GBRO-Windows.zip \
+            --target "$GITHUB_SHA" --prerelease --title "PhoneBox GBRO (Bluetooth) - test" \
+            --notes "Version Studio GBRO : liaison Bluetooth, sans port réseau. Branche ${GITHUB_REF_NAME}, commit ${GITHUB_SHA::7}."
