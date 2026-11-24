@@ -161,7 +161,7 @@ object BluetoothBridge {
             pcFingerprint = null
             pcName = null
             l.close()
-            for (id in streams.keys.toList()) closeStream(id, notify = false)
+            for (id in java.util.Collections.list(streams.keys())) closeStream(id, notify = false) // keys(): API 1
         }
     }
 
