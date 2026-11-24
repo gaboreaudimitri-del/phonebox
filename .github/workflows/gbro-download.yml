@@ -64,6 +64,19 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           merge-multiple: true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: src
+          sparse-checkout: gbro/docs
+      - name: Installation kit (manual, PC folder, phone app) for the team
+        run: |
+          kit="PhoneBox - Installation"
+          mkdir -p "$kit/PC" "$kit/Téléphone"
+          cp "src/gbro/docs/Manuel d'installation PhoneBox.pdf" "$kit/"
+          unzip -q PhoneBox-Bluetooth-Windows.zip -d "$kit/PC"
+          cp PhoneBox-Bluetooth.apk "$kit/Téléphone/"
+          zip -qr PhoneBox-Kit-Installation.zip "$kit"
+          rm -rf src
       - name: Publish on the gbro-latest download page
         env:
           GH_TOKEN: ${{ github.token }}
@@ -72,6 +85,6 @@ jobs:
           # the former name of this page, removed so only one download page remains
           gh release delete gbro-latest --yes --cleanup-tag || true
           gh release delete bluetooth-latest --yes --cleanup-tag || true
-          gh release create bluetooth-latest PhoneBox-Bluetooth.apk PhoneBox-Bluetooth-Windows.zip \
+          gh release create bluetooth-latest PhoneBox-Bluetooth.apk PhoneBox-Bluetooth-Windows.zip PhoneBox-Kit-Installation.zip \
             --target "$GITHUB_SHA" --prerelease --title "PhoneBox - édition Bluetooth" \
             --notes "Édition Bluetooth : liaison téléphone-PC en Bluetooth, sans port réseau. Commit ${GITHUB_SHA::7}."

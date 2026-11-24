@@ -32,6 +32,8 @@ var configDir = Path.GetDirectoryName(configPath) ?? AppPaths.ConfigDir;
 AppPaths.RestrictConfig(configPath);
 var configStore = new ConfigStore(configPath);
 configStore.PersistGenerated(); // keep the Wi-Fi token stable across restarts
+// Studio GBRO fork: the deck scripts (Scripts folder next to the agent) are found the same way wherever it is installed
+Environment.SetEnvironmentVariable("PHONEBOX_DIR", AppContext.BaseDirectory.TrimEnd('\\', '/'));
 GbroDefaults.Apply(configStore); // Studio GBRO fork: Teams, Outlook and lock controls, once
 var lanCfg = configStore.Get().Lan;
 var lanCert = lanCfg.Enabled && lanCfg.Port != Port ? Lan.Certificate(configDir) : null;
