@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * (RFCOMM, secure: only paired devices, encrypted by Bluetooth), and the agent on the PC connects to it on its own:
  * the PC makes an outgoing connection, so it opens no port and needs no firewall rule.
  *
- * On the phone, 127.0.0.1:[LOCAL_PORT] is forwarded over that link to the agent's Wi-Fi API on the PC's 127.0.0.1.
+ * On the phone, 127.0.0.2:[LOCAL_PORT] is forwarded over that link to the agent's Wi-Fi API on the PC's 127.0.0.1.
  * That API still needs the pinned certificate and the paired key, so the bridge adds a route, not a way around the
  * pairing: another app on the phone that reaches the local port meets the same TLS and key checks as on Wi-Fi.
  *
@@ -171,7 +171,7 @@ object BluetoothBridge {
         if (notify) try { link?.send(CLOSE, id) } catch (_: Exception) {}
     }
 
-    /** 127.0.0.1:[LOCAL_PORT] on the phone: each connection becomes a stream to the agent while a PC is connected. */
+    /** 127.0.0.2:[LOCAL_PORT] on the phone: each connection becomes a stream to the agent while a PC is connected. */
     private fun localServer() {
         while (true) {
             try {

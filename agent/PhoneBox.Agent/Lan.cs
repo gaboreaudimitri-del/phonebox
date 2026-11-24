@@ -39,14 +39,17 @@ public static class Lan
     public static string Fingerprint(X509Certificate2 cert) => Convert.ToHexString(SHA256.HashData(cert.RawData)).ToLowerInvariant();
 
     /// <summary>
-    /// Studio GBRO fork: the addresses put in the pairing link. 127.0.0.1 is the phone's own end of the Bluetooth
+    /// Studio GBRO fork: the addresses put in the pairing link. 127.0.0.2 is the phone's own end of the Bluetooth
     /// bridge (the app forwards it over Bluetooth to this agent's 127.0.0.1); the LAN addresses only when the Wi-Fi
     /// port listens on the network.
     /// </summary>
+    /// <summary>The phone's end of the Bluetooth bridge: a loopback address the app sends over Bluetooth.</summary>
+    public const string BluetoothHost = "127.0.0.2";
+
     public static IReadOnlyList<string> PairHosts(AgentConfig cfg)
     {
         var hosts = new List<string>();
-        if (cfg.Bluetooth.Enabled && OperatingSystem.IsWindows()) hosts.Add("127.0.0.1");
+        if (cfg.Bluetooth.Enabled && OperatingSystem.IsWindows()) hosts.Add(BluetoothHost);
         if (!cfg.Lan.LoopbackOnly) hosts.AddRange(Addresses());
         return hosts;
     }

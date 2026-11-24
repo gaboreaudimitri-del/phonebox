@@ -564,7 +564,7 @@ class AgentLink(private val context: Context) {
                 val p = host.split('.')
                 if (p.size != 4) return false
                 val b = p.map { s -> s.toIntOrNull()?.takeIf { s.length in 1..3 && it in 0..255 } ?: return false }
-                // Studio GBRO fork: 127.0.0.1 is this phone's end of the Bluetooth bridge (BluetoothBridge)
+                // Studio GBRO fork: 127.0.0.2 is this phone's end of the Bluetooth bridge (BluetoothBridge)
                 if (host == BRIDGE_HOST) return true
                 return b[0] == 10 || (b[0] == 172 && b[1] in 16..31) || (b[0] == 192 && b[1] == 168) || (b[0] == 100 && b[1] in 64..127)
             }
@@ -664,7 +664,7 @@ class AgentLink(private val context: Context) {
     companion object {
         /** Studio GBRO fork: the bridge's local port stands in for the PC's Wi-Fi port on 127.0.0.1. */
         /** This phone's end of the Bluetooth bridge (BluetoothBridge, kept out of this file's dependencies). */
-        const val BRIDGE_HOST = "127.0.0.1"
+        const val BRIDGE_HOST = "127.0.0.2" // loopback, but not 127.0.0.1: tests and other local servers keep that one
         const val BRIDGE_PORT = 8767
         fun portFor(host: String, port: Int): Int = if (host == BRIDGE_HOST) BRIDGE_PORT else port
         private const val USB_BASE = "https://127.0.0.1:8765"
