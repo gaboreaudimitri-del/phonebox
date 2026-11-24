@@ -110,6 +110,23 @@ class AgentLink(private val context: Context) {
         return true
     }
 
+    /**
+     * Studio GBRO fork: a paired PC has just connected over Bluetooth. It becomes the active one (its own panel and
+     * buttons), and the bridge address is tried first for it. A PC that was never paired is ignored: pairing (the QR
+     * code) stays the only way to get its key.
+     */
+    fun useBluetoothPc(fingerprint: String): Boolean = synchronized(pcsLock) {
+        val pc = pcs.firstOrNull { it.id == fingerprint } ?: return false
+        val hosts = listOf(BluetoothBridge.LOCAL_HOST) + pc.hosts.filter { it != BluetoothBridge.LOCAL_HOST }
+        if (pc.id == activeId && pc.hosts == hosts) return true
+        val updated = Pc(pc.id, pc.name, hosts, pc.port, pc.token, pc.macs)
+        savePcs(pcs.map { if (it.id == pc.id) updated else it }, pc.id)
+        factory = null
+        preferredHost = 0
+        trackpadSocket.close()
+        return true
+    }
+
     fun forget(id: String) = synchronized(pcsLock) {
         val rest = pcs.filter { it.id != id }
         savePcs(rest, if (activeId == id) rest.firstOrNull()?.id else activeId)
@@ -265,7 +282,7 @@ class AgentLink(private val context: Context) {
         val order = hosts.indices.sortedBy { if (target == null && it == preferredHost) -1 else it }
         for (i in order) {
             try {
-                val c = URL("https://${hosts[i]}:$port$pathAndQuery").openConnection() as HttpsURLConnection
+                val c = URL("https://${hosts[i]}:${portFor(hosts[i], port)}$pathAndQuery").openConnection() as HttpsURLConnection
                 c.sslSocketFactory = f
                 c.hostnameVerifier = javax.net.ssl.HostnameVerifier { _, _ -> true } // identity is the pinned certificate
                 c.connectTimeout = 1500
@@ -547,6 +564,8 @@ class AgentLink(private val context: Context) {
                 val p = host.split('.')
                 if (p.size != 4) return false
                 val b = p.map { s -> s.toIntOrNull()?.takeIf { s.length in 1..3 && it in 0..255 } ?: return false }
+                // Studio GBRO fork: 127.0.0.1 is this phone's end of the Bluetooth bridge (BluetoothBridge)
+                if (host == BluetoothBridge.LOCAL_HOST) return true
                 return b[0] == 10 || (b[0] == 172 && b[1] in 16..31) || (b[0] == 192 && b[1] == 168) || (b[0] == 100 && b[1] in 64..127)
             }
 
@@ -588,7 +607,7 @@ class AgentLink(private val context: Context) {
         var problem: PairFailure = PairFailure.Unreachable(link.pc, link.hosts)
         for (host in link.hosts) {
             try {
-                val c = URL("https://$host:${link.port}/api/pair/claim").openConnection() as HttpsURLConnection
+                val c = URL("https://$host:${portFor(host, link.port)}/api/pair/claim").openConnection() as HttpsURLConnection
                 c.instanceFollowRedirects = false
                 c.sslSocketFactory = pinned
                 c.hostnameVerifier = javax.net.ssl.HostnameVerifier { _, _ -> true } // identity is the pinned certificate
@@ -643,6 +662,8 @@ class AgentLink(private val context: Context) {
     }
 
     companion object {
+        /** Studio GBRO fork: the bridge's local port stands in for the PC's Wi-Fi port on 127.0.0.1. */
+        fun portFor(host: String, port: Int): Int = if (host == BluetoothBridge.LOCAL_HOST) BluetoothBridge.LOCAL_PORT else port
         private const val USB_BASE = "https://127.0.0.1:8765"
         /** The agent sends "state" every second, so a silent connection for this long is dead. */
         private const val STREAM_READ_TIMEOUT = 8000
@@ -747,7 +768,7 @@ class TrackpadSocket(private val link: AgentLink) {
             try {
                 raw = f.createSocket()
                 raw.tcpNoDelay = true
-                raw.connect(java.net.InetSocketAddress(host, port), 2000)
+                raw.connect(java.net.InetSocketAddress(host, AgentLink.portFor(host, port)), 2000)
                 val s = raw as javax.net.ssl.SSLSocket
                 s.soTimeout = 3000
                 s.startHandshake()

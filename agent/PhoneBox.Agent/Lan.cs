@@ -38,6 +38,19 @@ public static class Lan
 
     public static string Fingerprint(X509Certificate2 cert) => Convert.ToHexString(SHA256.HashData(cert.RawData)).ToLowerInvariant();
 
+    /// <summary>
+    /// Studio GBRO fork: the addresses put in the pairing link. 127.0.0.1 is the phone's own end of the Bluetooth
+    /// bridge (the app forwards it over Bluetooth to this agent's 127.0.0.1); the LAN addresses only when the Wi-Fi
+    /// port listens on the network.
+    /// </summary>
+    public static IReadOnlyList<string> PairHosts(AgentConfig cfg)
+    {
+        var hosts = new List<string>();
+        if (cfg.Bluetooth.Enabled && OperatingSystem.IsWindows()) hosts.Add("127.0.0.1");
+        if (!cfg.Lan.LoopbackOnly) hosts.AddRange(Addresses());
+        return hosts;
+    }
+
     /// <summary>Addresses the phone can try: private LAN IPv4 addresses first, then Tailscale (100.64.0.0/10).</summary>
     public static IReadOnlyList<string> Addresses()
     {

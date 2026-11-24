@@ -52,7 +52,8 @@ builder.WebHost.ConfigureKestrel(k =>
     // USB: the end of the phone's adb reverse tunnel, on a port of its own, over TLS the app pins, with the app's key
     k.Listen(IPAddress.Loopback, usb.Port, l => l.UseHttps(usbCert));
     // Wi-Fi / Tailscale: HTTPS with a pinned self-signed certificate, token required (see Lan.cs).
-    if (lanCert is not null) k.Listen(IPAddress.Any, lanCfg.Port, l => l.UseHttps(lanCert));
+    // Studio GBRO fork: 127.0.0.1 only by default, reached over the Bluetooth bridge (BluetoothBridge.cs)
+    if (lanCert is not null) k.Listen(lanCfg.LoopbackOnly ? IPAddress.Loopback : IPAddress.Any, lanCfg.Port, l => l.UseHttps(lanCert));
 });
 builder.Logging.ClearProviders();
 builder.Logging.AddFilter("Microsoft", LogLevel.Warning);
@@ -105,6 +106,10 @@ AddMonitor<BatteryMonitor>(builder.Services);
 AddMonitor<RuleEngine>(builder.Services);
 AddMonitor<ChargeGuard>(builder.Services);
 builder.Services.AddHostedService<Tray>();
+// Studio GBRO fork: the phone over Bluetooth, forwarded to the Wi-Fi API on 127.0.0.1 (see BluetoothBridge.cs)
+builder.Services.AddSingleton(sp => new BluetoothBridge(configStore, sp.GetRequiredService<ILogger<BluetoothBridge>>(),
+    lanCert is null ? null : Lan.Fingerprint(lanCert), lanCfg.Port));
+builder.Services.AddHostedService(sp => sp.GetRequiredService<BluetoothBridge>());
 
 var app = builder.Build();
 
@@ -304,7 +309,7 @@ app.MapGet("/api/pair", (ConfigStore cfg) =>
         port = lanCfg.Port,
         token = lan.Token,
         fingerprint = Lan.Fingerprint(lanCert),
-        hosts = Lan.Addresses(),
+        hosts = Lan.PairHosts(configStore.Get()),
         macs = WakeOnLan.LocalMacs(),
     });
 });
@@ -318,7 +323,7 @@ app.MapPost("/api/pair/start", (ConfigStore cfg, PairingCodes codes) =>
     if (!cfg.Get().Lan.Enabled || lanCert is null)
         return Results.Json(new { enabled = false, configured = cfg.Get().Lan.Enabled });
     var (code, expiresAt, attempt) = codes.Start(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-    var hosts = Lan.Addresses();
+    var hosts = Lan.PairHosts(configStore.Get());
     var fingerprint = Lan.Fingerprint(lanCert);
     var link = PairingCodes.Link(Environment.MachineName, fingerprint, lanCfg.Port, hosts, code);
     var apk = $"https://github.com/ersinkoc/phonebox/releases/download/v{AppPaths.Version}/PhoneBox-{AppPaths.Version}.apk";
@@ -343,13 +348,14 @@ app.MapGet("/api/pair/status", (PairingCodes codes) => Results.Json(new { claims
 app.MapPost("/api/pair/claim", (HttpRequest req, ConfigStore cfg, PairingCodes codes) =>
     ClaimPairingAsync(req, cfg, codes, lanCert, lanCfg.Port, app.Logger));
 
+app.MapGet("/api/bluetooth", (BluetoothBridge bt) => Results.Json(new { state = bt.State, phone = bt.Phone }));
 app.MapGet("/api/lan", (ConfigStore cfg) => Results.Json(new
 {
     configured = cfg.Get().Lan.Enabled,
     active = lanCert is not null,
     port = lanCfg.Port,
     restartNeeded = cfg.Get().Lan.Enabled != (lanCert is not null) || (lanCert is not null && cfg.Get().Lan.Port != lanCfg.Port),
-    hosts = Lan.Addresses(),
+    hosts = Lan.PairHosts(configStore.Get()),
     fingerprint = lanCert is null ? null : Lan.Fingerprint(lanCert),
 }));
 
@@ -1267,7 +1273,7 @@ public partial class Program
             port = lanPort,
             token = lan.Token,
             fingerprint = Lan.Fingerprint(lanCert),
-            hosts = Lan.Addresses(),
+            hosts = Lan.PairHosts(cfg.Get()),
             macs = WakeOnLan.LocalMacs(),
         });
     }

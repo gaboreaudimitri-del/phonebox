@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Studio GBRO fork: the Bluetooth link to the PC (BluetoothBridge). BLUETOOTH up to Android 11, BLUETOOTH_CONNECT from 12. -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Wake button only: names the Wi-Fi network so that the Wake-on-LAN packet cannot leave through mobile data -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

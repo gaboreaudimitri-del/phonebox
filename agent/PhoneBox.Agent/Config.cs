@@ -17,6 +17,8 @@ public sealed class AgentConfig
     public NightConfig Night { get; set; } = new();
     public DisplayConfig Display { get; set; } = new();
     public LanConfig Lan { get; set; } = new();
+    /// <summary>Studio GBRO fork: the phone over Bluetooth (no network, no firewall rule). Windows only.</summary>
+    public BluetoothConfig Bluetooth { get; set; } = new();
     public UpdateConfig Updates { get; set; } = new();
     public ClaudeConfig Claude { get; set; } = new();
     /// <summary>Cursor agent-transcript sessions on the AI sessions widget (off by default).</summary>
@@ -261,13 +263,25 @@ public sealed class DisplayConfig
 
 public sealed class LanConfig
 {
-    /// <summary>Also accept the phone over Wi-Fi (HTTPS + token, paired over USB). Requires an agent restart.</summary>
-    public bool Enabled { get; set; }
+    /// <summary>Also accept the phone over Wi-Fi (HTTPS + token, paired over USB). Requires an agent restart.
+    /// Studio GBRO fork: on by default, because the Bluetooth bridge reaches the agent through this port.</summary>
+    public bool Enabled { get; set; } = true;
     public int Port { get; set; } = 8766;
+    /// <summary>Studio GBRO fork: listen on 127.0.0.1 only (default). The phone then comes in over the Bluetooth
+    /// bridge only: no port is open on the network and Windows asks for no firewall rule. False = also the LAN.</summary>
+    public bool LoopbackOnly { get; set; } = true;
     /// <summary>Shared secret handed to the phone over USB. Empty = generate a new one (forces re-pairing).</summary>
     public string? Token { get; set; }
     /// <summary>Separate key for the webhook API from other machines (push/notify/goto/refresh only). May appear in URLs.</summary>
     public string? WebhookToken { get; set; }
+}
+
+public sealed class BluetoothConfig
+{
+    /// <summary>Look for a paired phone running the app and connect to it over Bluetooth (RFCOMM). The agent makes
+    /// the connection (outgoing), so it opens no port; the link only ever reaches this agent's Wi-Fi API on
+    /// 127.0.0.1, which still needs the pinned certificate and the paired key.</summary>
+    public bool Enabled { get; set; } = true;
 }
 
 public sealed class UpdateConfig
@@ -721,6 +735,9 @@ public sealed partial class ConfigStore(string path)
         c.OpenCode.TimeoutSec = Math.Clamp(c.OpenCode.TimeoutSec, 10, 3600);
         c.OpenCode.AlwaysCountdownSec = Math.Clamp(c.OpenCode.AlwaysCountdownSec, 0, 60);
         if (string.IsNullOrWhiteSpace(c.Updates.Repo)) c.Updates.Repo = "ersinkoc/phonebox";
+        // Studio GBRO fork: an update from the original project would replace this build (and its Bluetooth bridge)
+        if (c.Updates.Repo == "ersinkoc/phonebox") c.Updates.Auto = false;
+        c.Bluetooth ??= new();
         c.Lan.Port = Math.Clamp(c.Lan.Port, 1024, 65535);
         if (string.IsNullOrWhiteSpace(c.Lan.Token)) c.Lan.Token = NewToken();
         if (string.IsNullOrWhiteSpace(c.Lan.WebhookToken)) c.Lan.WebhookToken = NewToken();

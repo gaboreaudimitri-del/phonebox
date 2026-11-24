@@ -92,6 +92,17 @@ class MainActivity : Activity(), SensorEventListener {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         link = AgentLink(this)
+        // Studio GBRO fork: the PC that connects over Bluetooth becomes the active one, with its own panel
+        BluetoothBridge.onPcConnected = { fp ->
+            val wasActive = link.activePc()?.id == fp
+            if (link.useBluetoothPc(fp) && !wasActive) runOnUiThread {
+                if (isFinishing || isDestroyed || destroyed) return@runOnUiThread
+                stream.stop(); if (resumed) stream.start(); if (hasWeb) web.reload()
+            }
+        }
+        if (BluetoothBridge.hasPermission(this)) BluetoothBridge.start(this)
+        else if (android.os.Build.VERSION.SDK_INT >= 31)
+            requestPermissions(arrayOf(BluetoothBridge.CONNECT_PERMISSION), BluetoothBridge.PERMISSION_REQUEST)
         stream = AgentStream(link) { event, data ->
             val js = "window.onAgentStream && window.onAgentStream(${JSONObject.quote(event)}, ${JSONObject.quote(data)})"
             runOnUiThread { if (!destroyed) web.evaluateJavascript(js, null) }
@@ -333,6 +344,8 @@ class MainActivity : Activity(), SensorEventListener {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == BluetoothBridge.PERMISSION_REQUEST && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED)
+            BluetoothBridge.start(this)
         if (requestCode == Dictation.PERMISSION_REQUEST)
             dictation.onPermission(grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED)
     }
