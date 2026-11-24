@@ -34,8 +34,8 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 object BluetoothBridge {
     val SERVICE_ID: UUID = UUID.fromString("6f3c2a10-9b1e-4d6a-a7c2-5b0e8d4f1a37")
-    const val LOCAL_PORT = 8767
-    const val LOCAL_HOST = "127.0.0.1"
+    const val LOCAL_PORT = AgentLink.BRIDGE_PORT
+    const val LOCAL_HOST = AgentLink.BRIDGE_HOST
     const val PERMISSION_REQUEST = 4711
     const val CONNECT_PERMISSION = "android.permission.BLUETOOTH_CONNECT" // Android 12+ runtime permission
 
