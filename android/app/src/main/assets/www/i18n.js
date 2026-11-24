@@ -12241,6 +12241,13 @@
     if (data.panel) PANEL[lang] = { ...PANEL[lang], ...data.panel };
   }
   delete window.PhoneBoxLocaleData;
+  // Studio GBRO fork: entries of locale-gbro.js, added to (not replacing) each language
+  for (const [lang, data] of Object.entries(window.PhoneBoxLocaleDataGbro || {})) {
+    if (data.strings) STRINGS[lang] = { ...STRINGS[lang], ...data.strings };
+    if (data.catalog) CATALOG[lang] = { ...CATALOG[lang], ...data.catalog };
+    if (data.panel) PANEL[lang] = { ...PANEL[lang], ...data.panel };
+  }
+  delete window.PhoneBoxLocaleDataGbro;
 
   let pref = 'auto';
   let active = 'en';

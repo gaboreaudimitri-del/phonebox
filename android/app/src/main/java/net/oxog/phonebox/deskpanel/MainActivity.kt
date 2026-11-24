@@ -495,6 +495,16 @@ class MainActivity : Activity(), SensorEventListener {
             else @Suppress("DEPRECATION") v.vibrate(timings, -1)
         }
 
+        // Studio GBRO fork: the music playing on this phone (PhoneMedia)
+        @JavascriptInterface
+        fun phoneMedia(key: String): String = if (ok(key)) PhoneMedia.state(this@MainActivity) else "{}"
+
+        @JavascriptInterface
+        fun phoneMediaCommand(key: String, cmd: String): Boolean = ok(key) && PhoneMedia.command(this@MainActivity, cmd)
+
+        @JavascriptInterface
+        fun phoneMediaAccess(key: String) { if (ok(key)) PhoneMedia.openAccessSettings(this@MainActivity) }
+
         @JavascriptInterface
         fun battery(key: String): String {
             if (!ok(key)) return "{}"

@@ -19,6 +19,8 @@ public sealed class AgentConfig
     public LanConfig Lan { get; set; } = new();
     /// <summary>Studio GBRO fork: the phone over Bluetooth (no network, no firewall rule). Windows only.</summary>
     public BluetoothConfig Bluetooth { get; set; } = new();
+    /// <summary>Studio GBRO fork: which set of professional controls was already added (GbroDefaults.cs).</summary>
+    public int GbroSeed { get; set; }
     public UpdateConfig Updates { get; set; } = new();
     public ClaudeConfig Claude { get; set; } = new();
     /// <summary>Cursor agent-transcript sessions on the AI sessions widget (off by default).</summary>

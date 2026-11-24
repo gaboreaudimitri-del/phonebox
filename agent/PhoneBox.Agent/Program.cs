@@ -32,6 +32,7 @@ var configDir = Path.GetDirectoryName(configPath) ?? AppPaths.ConfigDir;
 AppPaths.RestrictConfig(configPath);
 var configStore = new ConfigStore(configPath);
 configStore.PersistGenerated(); // keep the Wi-Fi token stable across restarts
+GbroDefaults.Apply(configStore); // Studio GBRO fork: Teams, Outlook and lock controls, once
 var lanCfg = configStore.Get().Lan;
 var lanCert = lanCfg.Enabled && lanCfg.Port != Port ? Lan.Certificate(configDir) : null;
 // USB uses the same certificate as Wi-Fi; the agent hands its fingerprint to the app over adb (see UsbLink.cs)
